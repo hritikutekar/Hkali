@@ -2835,16 +2835,13 @@ static int fsg_main_thread(void *common_)
 static DEVICE_ATTR(ro, 0644, fsg_show_ro, fsg_store_ro);
 static DEVICE_ATTR(nofua, 0644, fsg_show_nofua, fsg_store_nofua);
 static DEVICE_ATTR(file, 0644, fsg_show_file, fsg_store_file);
-<<<<<<< HEAD
+static DEVICE_ATTR(cdrom, 0644, fsg_show_cdrom, fsg_store_cdrom);
 
 static struct device_attribute dev_attr_ro_cdrom =
 	__ATTR(ro, 0444, fsg_show_ro, NULL);
 static struct device_attribute dev_attr_file_nonremovable =
 	__ATTR(file, 0644, fsg_show_file, fsg_store_file);
 
-=======
-static DEVICE_ATTR(cdrom, 0644, fsg_show_cdrom, fsg_store_cdrom);
->>>>>>> 46bd47757a9... usb: gadget: mass_storage: added sysfs entry for cdrom to LUNs
 #ifdef CONFIG_USB_MSC_PROFILING
 static DEVICE_ATTR(perf, 0644, fsg_show_perf, fsg_store_perf);
 #endif
@@ -3017,66 +3014,9 @@ static struct fsg_common *fsg_common_init(struct fsg_common *common,
 	common->luns = curlun;
 
 	init_rwsem(&common->filesem);
-<<<<<<< HEAD
 	rc = create_lun_device(common, cdev, cfg, 0);
 	if (rc != 0)
 		goto error;
-=======
-
-	for (i = 0, lcfg = cfg->luns; i < nluns; ++i, ++curlun, ++lcfg) {
-		curlun->cdrom = !!lcfg->cdrom;
-		curlun->ro = lcfg->cdrom || lcfg->ro;
-		curlun->initially_ro = curlun->ro;
-		curlun->removable = lcfg->removable;
-		curlun->nofua = lcfg->nofua;
-		curlun->dev.release = fsg_lun_release;
-		curlun->dev.parent = &gadget->dev;
-		/* curlun->dev.driver = &fsg_driver.driver; XXX */
-		dev_set_drvdata(&curlun->dev, &common->filesem);
-		dev_set_name(&curlun->dev,
-			     cfg->lun_name_format
-			   ? cfg->lun_name_format
-			   : "lun%d",
-			     i);
-
-		rc = device_register(&curlun->dev);
-		if (rc) {
-			INFO(common, "failed to register LUN%d: %d\n", i, rc);
-			common->nluns = i;
-			put_device(&curlun->dev);
-			goto error_release;
-		}
-
-		rc = device_create_file(&curlun->dev, &dev_attr_ro);
-		if (rc)
-			goto error_luns;
-		rc = device_create_file(&curlun->dev, &dev_attr_file);
-		if (rc)
-			goto error_luns;
-		rc = device_create_file(&curlun->dev, &dev_attr_nofua);
-		if (rc)
-			goto error_luns;
-		rc = device_create_file(&curlun->dev, &dev_attr_cdrom);
-		if (rc)
-			goto error_luns;
-#ifdef CONFIG_USB_MSC_PROFILING
-		rc = device_create_file(&curlun->dev, &dev_attr_perf);
-		if (rc)
-			dev_err(&gadget->dev, "failed to create sysfs entry:"
-				"(dev_attr_perf) error: %d\n", rc);
-#endif
-		if (lcfg->filename) {
-			rc = fsg_lun_open(curlun, lcfg->filename);
-			if (rc)
-				goto error_luns;
-		} else if (!curlun->removable && !curlun->cdrom) {
-			ERROR(common, "no file given for LUN%d\n", i);
-			rc = -EINVAL;
-			goto error_luns;
-		}
-	}
-	common->nluns = nluns;
->>>>>>> 46bd47757a9... usb: gadget: mass_storage: added sysfs entry for cdrom to LUNs
 
 	/* Data buffers cyclic list */
 	bh = common->buffhds;
